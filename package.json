@@ -1,0 +1,58 @@
+{
+  "name": "geekforms",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PERN dynamic survey builder with conditional logic and analytics",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "npm run db:migrate && concurrently -n server,client -c blue,green \"npm:dev -w server\" \"npm:dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "npm run start -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "db:up": "docker compose up -d db",
+    "db:generate": "npm run db:generate -w server",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:seed": "npm run db:seed:demo -w server",
+    "db:seed:reset": "npm run db:seed:demo -w server -- --reset",
+    "smoke": "npm run smoke -w server",
+    "test": "npm test -w shared && npm test -w server",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.10.1",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "typescript-eslint": "^8.73.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "type": "module",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
