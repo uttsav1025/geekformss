@@ -9,6 +9,7 @@ const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AllSurveys = lazy(() => import('./pages/AllSurveys'));
+const Builder = lazy(() => import('./pages/Builder'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -37,6 +38,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="surveys" element={<AllSurveys />} />
+            <Route path="surveys/:id/edit" element={<Builder />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
