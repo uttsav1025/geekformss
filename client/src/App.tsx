@@ -4,12 +4,14 @@ import { useAuth } from './lib/auth';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Spinner from './components/common/Spinner';
 
-// Each route is its own chunk, loaded on first visit.
+// Each route is its own chunk: respondents on /s/:slug never download the
+// builder, charts or admin shell, and admins load each screen on first visit.
 const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AllSurveys = lazy(() => import('./pages/AllSurveys'));
 const Builder = lazy(() => import('./pages/Builder'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 const PublicSurvey = lazy(() => import('./pages/PublicSurvey'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -41,6 +43,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="surveys" element={<AllSurveys />} />
             <Route path="surveys/:id/edit" element={<Builder />} />
+            <Route path="surveys/:id/analytics" element={<Analytics />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
