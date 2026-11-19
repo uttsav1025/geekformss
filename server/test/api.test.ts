@@ -204,6 +204,78 @@ test("list is paginated with meta; other users get 404", async () => {
   assert.equal(res.status, 404);
 });
 
+// ── Table search ─────────────────────────────────────────────────────────────
+
+test("search: terms, status words, facet filters, scope and contextual counts", async () => {
+  // A separate account, so the counts only see the surveys made here.
+  const reg = await request(app)
+    .post(`${API}/auth/register`)
+    .send({ name: "Searcher", email: `test-search-${stamp}@example.com`, password: "password123" });
+  const h = { Authorization: `Bearer ${reg.body.data.accessToken}` };
+  const make = async (title: string) => {
+    const r = await request(app).post(`${API}/surveys`).set(h).send({ title });
+    await request(app).patch(`${API}/surveys/${r.body.data.id}`).set(h).send({ schema });
+    return r.body.data as { id: string; slug: string };
+  };
+  await make("Alpha launch"); // draft
+  const beta = await make("Beta feedback");
+  const gamma = await make("Gamma retro");
+  await request(app).post(`${API}/surveys/${beta.id}/publish`).set(h);
+  await request(app).post(`${API}/surveys/${gamma.id}/publish`).set(h);
+  await request(app).patch(`${API}/surveys/${gamma.id}/status`).set(h).send({ status: "closed" });
+  const sent = await request(app)
+    .post(`${API}/public/surveys/${beta.slug}/responses`)
+    .send({ answers: { q_pet: "o_no", q_rate: 4 } });
+  assert.equal(sent.status, 201);
+  // Edit after publishing: Beta now has unpublished changes.
+  await request(app).patch(`${API}/surveys/${beta.id}`).set(h).send({ title: "Beta feedback v2" });
+
+  const find = async (query: string) => {
+    const r = await request(app).get(`${API}/surveys/search?${query}`).set(h);
+    assert.equal(r.status, 200);
+    return (r.body.data as { title: string }[]).map((x) => x.title).sort();
+  };
+  assert.deepEqual(await find("q=alpha"), ["Alpha launch"]);
+  assert.deepEqual(await find("q=live"), ["Beta feedback v2"]); // status word
+  assert.deepEqual(await find("q=beta%20feed"), ["Beta feedback v2"]); // every term must match
+  assert.deepEqual(await find("q=beta%20zzz"), []);
+  assert.deepEqual(await find("q=%25"), []); // LIKE wildcards are literal
+  assert.deepEqual(await find("status=draft&status=closed"), ["Alpha launch", "Gamma retro"]);
+  assert.deepEqual(await find("responses=with"), ["Beta feedback v2"]);
+  assert.deepEqual(await find("responses=none&status=closed"), ["Gamma retro"]);
+  assert.deepEqual(await find("unpublished=true"), ["Beta feedback v2"]);
+  assert.deepEqual(await find("scope=published"), ["Beta feedback v2"]);
+
+  const paged = await request(app).get(`${API}/surveys/search?limit=2&sort=title`).set(h);
+  assert.deepEqual(
+    paged.body.data.map((x: { title: string }) => x.title),
+    ["Alpha launch", "Beta feedback v2"],
+  );
+  assert.equal(paged.body.meta.total, 3);
+  assert.equal(paged.body.meta.hasNextPage, true);
+
+  const facets = async (query: string) => (await request(app).get(`${API}/surveys/search/facets?${query}`).set(h)).body.data;
+  assert.deepEqual(await facets(""), {
+    baseTotal: 3,
+    status: { draft: 1, published: 1, closed: 1 },
+    statusAll: 3,
+    responses: { any: 3, with: 1, none: 2 },
+    unpublished: 1,
+    anyUnpublished: true,
+  });
+  // Counts are contextual: each facet ignores its own selection, honours the others.
+  const drafts = await facets("status=draft");
+  assert.equal(drafts.status.published, 1);
+  assert.deepEqual(drafts.responses, { any: 1, with: 0, none: 1 });
+  const searched = await facets("q=gamma");
+  assert.equal(searched.baseTotal, 3); // before search
+  assert.equal(searched.statusAll, 1);
+
+  const bad = await request(app).get(`${API}/surveys/search?responses=maybe`).set(h);
+  assert.equal(bad.status, 422);
+  assert.equal((await request(app).get(`${API}/surveys/search`)).status, 401);
+});
+
 // ── Public form ──────────────────────────────────────────────────────────────
 
 test("public submit validates required + conditional fields", async () => {

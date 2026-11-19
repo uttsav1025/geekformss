@@ -18,6 +18,23 @@ export const listSurveysQuerySchema = z.object({
   sort: z.preprocess(emptyToUndefined, z.enum(SURVEY_SORTS).default("updated")),
 });
 
+// Table search: free text + facet filters. Same query for the results page
+// and for the facet counts, so the pills always describe the visible list.
+const toBool = (v: unknown) => (v === "true" || v === "1" ? true : v === "false" || v === "0" || v === "" ? false : v);
+export const RESPONSE_FILTERS = ["any", "with", "none"] as const;
+export type ResponseFilter = (typeof RESPONSE_FILTERS)[number];
+
+export const searchSurveysQuerySchema = z.object({
+  /** Whitespace-separated terms; every term must match title, link or status word. */
+  q: z.preprocess(emptyToUndefined, z.string().trim().max(100).optional()),
+  /** Fixed scope (e.g. Home shows only live surveys); applies to counts too. */
+  scope: z.preprocess(emptyToUndefined, z.enum(SURVEY_STATUSES).optional()),
+  status: z.preprocess(toArray, z.array(z.enum(SURVEY_STATUSES)).max(SURVEY_STATUSES.length).optional()),
+  responses: z.preprocess(emptyToUndefined, z.enum(RESPONSE_FILTERS).default("any")),
+  unpublished: z.preprocess(toBool, z.boolean().default(false)),
+  sort: z.preprocess(emptyToUndefined, z.enum(SURVEY_SORTS).default("updated")),
+});
+
 // Drafts are saved leniently (the admin may be mid-edit with an empty label);
 // only the overall shape is enforced here. Full semantic validation runs on publish.
 const draftSchemaShape = z.looseObject({
@@ -44,5 +61,6 @@ export const updateSurveySchema = z
 export const setStatusSchema = z.object({ status: z.enum(["published", "closed"]) });
 
 export type ListSurveysQuery = z.infer<typeof listSurveysQuerySchema>;
+export type SearchSurveysQuery = z.infer<typeof searchSurveysQuerySchema>;
 export type CreateSurveyInput = z.infer<typeof createSurveySchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveySchema>;

@@ -6,6 +6,8 @@ another user's survey returns **404**, never 403.
 | Method | Path | Body / query | Success |
 |---|---|---|---|
 | GET | `/surveys` | `?page&limit&search&status&sort` | 200 page of surveys |
+| GET | `/surveys/search` | `?q&scope&status&responses&unpublished&sort&page&limit` | 200 page of surveys (default `limit` 25) |
+| GET | `/surveys/search/facets` | same query (no paging) | 200 contextual counts for the filter pills |
 | GET | `/surveys/stats` | – | 200 `{ days: [{ day, count }], previousTotal }`: completed responses per UTC day for the last 30 days, all your surveys |
 | POST | `/surveys` | `{ title, description?, schema? }` | 201 survey |
 | GET | `/surveys/:id` | – | 200 survey |
@@ -19,6 +21,30 @@ another user's survey returns **404**, never 403.
 - `search`: case-insensitive match on title or slug. `%` and `_` match literally.
 - `status`: repeatable, e.g. `?status=draft&status=closed`. Values: `draft`, `published`, `closed`.
 - `sort`: `updated` (default), `created`, `title`, `responses`. Each sort ends with an id tie-breaker, so pages never repeat or skip rows.
+
+## Search query
+The survey table's search. Both endpoints take the same query, so the counts always describe the list on screen.
+- `q`: whitespace-separated terms (up to 8); **every** term must match the title, the slug or a status word (`live` finds published surveys). Case-insensitive; `%` and `_` match literally.
+- `scope`: a fixed status the whole search lives in (Home uses `scope=published`). Applies to the counts too.
+- `status`: repeatable filter, e.g. `?status=draft&status=closed`.
+- `responses`: `any` (default), `with` (at least one completed response) or `none`.
+- `unpublished`: `true` keeps published surveys whose draft differs from the live version.
+- `sort`, `page`, `limit`: as for `GET /surveys`. Invalid values are `422` with field errors.
+
+Facets response:
+
+```jsonc
+{
+  "baseTotal": 3,                                  // in scope, before search and filters
+  "status": { "draft": 1, "published": 1, "closed": 1 },
+  "statusAll": 3,
+  "responses": { "any": 3, "with": 1, "none": 2 },
+  "unpublished": 1,
+  "anyUnpublished": true
+}
+```
+
+Each count is **contextual**: how many surveys would remain if that option were picked, with the other facets as they are. A facet ignores its own selection, so with `status=draft` the other status counts are still shown. All counts come from one aggregate query over the searched pool.
 
 ## Survey shape
 

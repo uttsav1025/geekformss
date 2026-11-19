@@ -82,11 +82,11 @@ export type PresentedSurvey = ReturnType<typeof present>;
 const ownedLive = (id: string, ownerId: string) =>
   and(eq(surveys.id, id), eq(surveys.ownerId, ownerId), eq(surveys.deleted, false));
 
-const baseSelect = () =>
+export const baseSelect = () =>
   db.select(surveyColumns).from(surveys).leftJoin(surveyVersions, eq(surveyVersions.id, surveys.currentVersionId));
 
 // Always end with an id tie-breaker so pages never repeat or skip rows.
-const orderFor = (sort: SurveySort) => {
+export const orderFor = (sort: SurveySort) => {
   switch (sort) {
     case "created":
       return [desc(surveys.createdAt), desc(surveys.id)];

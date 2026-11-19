@@ -7,10 +7,12 @@ import {
   createSurveySchema,
   idParamSchema,
   listSurveysQuerySchema,
+  searchSurveysQuerySchema,
   setStatusSchema,
   updateSurveySchema,
 } from "./Survey.schema.zod.js";
 import * as surveyService from "./Survey.service.js";
+import * as surveySearch from "./Survey.search.js";
 
 const ownerId = (req: Request) => req.user!.id;
 const notFound = () => new AppError(404, "Survey not found"); // also for someone else's survey
@@ -21,6 +23,28 @@ export const list = async (req: Request, res: Response, next: NextFunction) => {
     const query = parseOrThrow(listSurveysQuerySchema, req.query);
     const result = await surveyService.listSurveys({ ownerId: ownerId(req), ...pagination, ...query });
     sendPage(res, result.data, result.meta, "Surveys fetched");
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** GET /surveys/search — the table's search: one page of matches. */
+export const search = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const pagination = getPagination(req, 25);
+    const query = parseOrThrow(searchSurveysQuerySchema, req.query);
+    const result = await surveySearch.searchSurveys({ ownerId: ownerId(req), ...pagination, ...query });
+    sendPage(res, result.data, result.meta, "Search results");
+  } catch (error) {
+    next(error);
+  }
+};
+
+/** GET /surveys/search/facets — contextual counts for the filter pills, same query. */
+export const searchFacets = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { sort: _sort, ...query } = parseOrThrow(searchSurveysQuerySchema, req.query);
+    sendSuccess(res, await surveySearch.searchFacets({ ownerId: ownerId(req), ...query }), "Search facets");
   } catch (error) {
     next(error);
   }
