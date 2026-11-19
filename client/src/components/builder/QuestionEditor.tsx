@@ -11,18 +11,17 @@ import type { DragEvent } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  ChevronDown,
   CircleDot,
   Copy,
   GripVertical,
   ListChecks,
-  MoreHorizontal,
   Plus,
   Star,
   Trash2,
   Type,
 } from 'lucide-react';
 import Select from '../common/Select';
-import Menu from '../common/Menu';
 import Switch from '../common/Switch';
 import { plural } from '../../lib/questionOps';
 import OptionsEditor from './OptionsEditor';
@@ -116,16 +115,46 @@ function QuestionHeader({
       )}
       {q.required && <span className="chip">Required</span>}
       <div className="flex flex-none max-sm:ml-auto">
-        <Menu
-          label={`More actions for question ${index + 1}`}
-          trigger={<MoreHorizontal {...I} />}
-          items={[
-            { label: 'Move up', icon: <ArrowUp {...I} />, onSelect: () => onMove(-1), disabled: index === 0 },
-            { label: 'Move down', icon: <ArrowDown {...I} />, onSelect: () => onMove(1), disabled: index === total - 1 },
-            { separator: true },
-            { label: 'Duplicate', icon: <Copy {...I} />, onSelect: onDuplicate },
-          ]}
-        />
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => onMove(-1)}
+          disabled={index === 0}
+          aria-label={`Move question ${index + 1} up`}
+          title="Move up"
+        >
+          <ArrowUp {...I} />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => onMove(1)}
+          disabled={index === total - 1}
+          aria-label={`Move question ${index + 1} down`}
+          title="Move down"
+        >
+          <ArrowDown {...I} />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onDuplicate}
+          aria-label={`Duplicate question ${index + 1}`}
+          title="Duplicate"
+        >
+          <Copy {...I} />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onToggleCollapse}
+          aria-expanded={!collapsed}
+          aria-label={`${collapsed ? 'Expand' : 'Collapse'} question ${index + 1}`}
+          title={collapsed ? 'Expand' : 'Collapse'}
+        >
+          <ChevronDown {...I} className={`transition-transform duration-180 ease-gf ${collapsed ? '' : 'rotate-180'}`} />
+        </button>
+        <span className="mx-1 my-auto h-5 w-px bg-line" aria-hidden="true" />
         <button type="button" className="icon-btn icon-btn-danger" onClick={onRemove} aria-label="Delete question" title="Delete">
           <Trash2 {...I} />
         </button>
@@ -149,7 +178,7 @@ export interface QuestionEditorProps {
   onToggleCollapse: () => void;
 }
 
-/** One question in the builder: header (collapse, menu, delete) and its editable body. */
+/** One question in the builder: header (reorder, duplicate, expand, delete) and its editable body. */
 export default function QuestionEditor({
   question: q,
   index,

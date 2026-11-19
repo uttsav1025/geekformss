@@ -26,7 +26,10 @@ export default function PageBar({ crumbs, children }: { crumbs: Crumb[]; childre
             const last = i === crumbs.length - 1;
             const middle = i > 0 && !last;
             return (
-              <li key={`${i}-${c.label}`} className={`flex min-w-0 items-center gap-1 ${middle ? 'max-w-[40ch]' : ''}`}>
+              <li
+                key={`${i}-${c.label}`}
+                className={`flex items-center gap-1 ${middle ? 'max-w-[40ch] min-w-0' : last ? 'min-w-0' : 'flex-none'}`}
+              >
                 {i > 0 && <ChevronRight size={14} strokeWidth={1.5} className="flex-none text-muted" aria-hidden="true" />}
                 {last || !c.to ? (
                   <span
