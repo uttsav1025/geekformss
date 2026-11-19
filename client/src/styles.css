@@ -1,0 +1,491 @@
+/*
+ * GeekForms — Tailwind entry point.
+ *
+ * Direction: a paper questionnaire filled in with ink. Graphite chrome for the
+ * admin, a faint paper tint for respondents, one ink-blue accent shared with the
+ * charts, and a hand-drawn ink tick as the signature.
+ *
+ * Layout and component styling lives in the markup as Tailwind utilities. This
+ * file only holds what utilities can't express: the theme tokens (switched per
+ * light / dark / paper by plain CSS variables), base element styles, a handful
+ * of shared primitives (in the components layer, so utilities always override
+ * them), scrollbars, keyframes and the dialog backdrop.
+ */
+@import 'tailwindcss';
+
+/* ── Theme tokens (raw values; swapped per theme below) ─────────────────── */
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --raised: #f4f4f5;
+  --text: #171717;
+  --text-2: #525252;
+  --muted: #686868;
+  --line: rgba(23, 23, 23, 0.08);
+  --line-strong: rgba(23, 23, 23, 0.16);
+  --field: #f7f7f8;
+  /* ink accent — 6.4:1 on white */
+  --accent: #1e56c2;
+  --accent-hover: #1a4aa8;
+  --accent-ink: #ffffff;
+  --accent-soft: #edf2fc;
+  --accent-line: rgba(30, 86, 194, 0.32);
+  --danger: #c42b2b;
+  --danger-soft: #fcefef;
+  --danger-ink: #ffffff;
+  --positive: #16803c;
+  --warn: #8a5a00;
+  --warn-soft: #fbf3e2;
+  /* charts: same ink family */
+  --series-1: #2a78d6;
+  --track: #efefef;
+  --ramp-1: #86b6ef;
+  --ramp-2: #5598e7;
+  --ramp-3: #2a78d6;
+  --ramp-4: #256abf;
+  --ramp-5: #184f95;
+  --elev-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --elev-float: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --scroll-thumb: color-mix(in srgb, var(--text) 20%, transparent);
+  --scroll-thumb-hover: color-mix(in srgb, var(--text) 36%, transparent);
+  color-scheme: light;
+}
+
+/* Dark: system preference (unless the toggle forces light) or the explicit toggle. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #141415;
+    --surface: #19191b;
+    --raised: #232325;
+    --text: #ededed;
+    --text-2: #a1a1a6;
+    --muted: #85858b;
+    --line: rgba(237, 237, 237, 0.08);
+    --line-strong: rgba(237, 237, 237, 0.16);
+    --field: #1f1f22;
+    --accent: #86b6ef;
+    --accent-hover: #a5c8f3;
+    --accent-ink: #0b1a33;
+    --accent-soft: #172536;
+    --accent-line: rgba(134, 182, 239, 0.36);
+    --danger: #e5484d;
+    --danger-soft: #331b1c;
+    --danger-ink: #1a0d0d;
+    --positive: #4cc38a;
+    --warn: #e0a84a;
+    --warn-soft: #2d2412;
+    --series-1: #3987e5;
+    --track: #26262a;
+    --ramp-1: #184f95;
+    --ramp-2: #256abf;
+    --ramp-3: #3987e5;
+    --ramp-4: #6da7ec;
+    --ramp-5: #9ec5f4;
+    --elev-sm: none;
+    --elev-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #141415;
+  --surface: #19191b;
+  --raised: #232325;
+  --text: #ededed;
+  --text-2: #a1a1a6;
+  --muted: #85858b;
+  --line: rgba(237, 237, 237, 0.08);
+  --line-strong: rgba(237, 237, 237, 0.16);
+  --field: #1f1f22;
+  --accent: #86b6ef;
+  --accent-hover: #a5c8f3;
+  --accent-ink: #0b1a33;
+  --accent-soft: #172536;
+  --accent-line: rgba(134, 182, 239, 0.36);
+  --danger: #e5484d;
+  --danger-soft: #331b1c;
+  --danger-ink: #1a0d0d;
+  --positive: #4cc38a;
+  --warn: #e0a84a;
+  --warn-soft: #2d2412;
+  --series-1: #3987e5;
+  --track: #26262a;
+  --ramp-1: #184f95;
+  --ramp-2: #256abf;
+  --ramp-3: #3987e5;
+  --ramp-4: #6da7ec;
+  --ramp-5: #9ec5f4;
+  --elev-sm: none;
+  --elev-float: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* Respondent pages sit on paper: the warm ramp. */
+.public {
+  --bg: #f7f4ee;
+  --surface: #fdfbf7;
+  --raised: #efe9df;
+  --text: #1f1b16;
+  --text-2: #5e554a;
+  --muted: #6c6357;
+  --line: rgba(31, 27, 22, 0.09);
+  --line-strong: rgba(31, 27, 22, 0.18);
+  --field: #f8f5ef;
+  --accent-soft: #eef0f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .public {
+    --bg: #161513;
+    --surface: #1c1a18;
+    --raised: #262421;
+    --text: #efe9de;
+    --text-2: #aaa398;
+    --muted: #8a847a;
+    --line: rgba(239, 233, 222, 0.08);
+    --line-strong: rgba(239, 233, 222, 0.16);
+    --field: #22201d;
+    --accent-soft: #1b2433;
+  }
+}
+:root[data-theme='dark'] .public {
+  --bg: #161513;
+  --surface: #1c1a18;
+  --raised: #262421;
+  --text: #efe9de;
+  --text-2: #aaa398;
+  --muted: #8a847a;
+  --line: rgba(239, 233, 222, 0.08);
+  --line-strong: rgba(239, 233, 222, 0.16);
+  --field: #22201d;
+  --accent-soft: #1b2433;
+}
+
+/* ── Tailwind theme: utilities read the variables above ─────────────────── */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-field: var(--field);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
+  --color-positive: var(--positive);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-series: var(--series-1);
+  --color-track: var(--track);
+  --color-ramp-1: var(--ramp-1);
+  --color-ramp-2: var(--ramp-2);
+  --color-ramp-3: var(--ramp-3);
+  --color-ramp-4: var(--ramp-4);
+  --color-ramp-5: var(--ramp-5);
+
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+
+  --radius-sm: 6px; /* small buttons, menu rows */
+  --radius-md: 8px; /* controls */
+  --radius-lg: 12px; /* cards, panels */
+
+  --shadow-soft: var(--elev-sm);
+  --shadow-float: var(--elev-float);
+
+  --ease-gf: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* The layout's two breakpoints: phones (< 600) and the builder's sidebar (< 960). */
+  --breakpoint-sm: 37.5rem;
+  --breakpoint-md: 60rem;
+
+  --animate-spin-slow: spin 800ms linear infinite;
+  --animate-fade-in: fade-in 300ms var(--ease-gf) both;
+  --animate-menu-in: menu-in 180ms var(--ease-gf);
+  --animate-toast-in: toast-in 300ms var(--ease-gf);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+@layer base {
+  /* Always show the root scrollbar lane (an empty track when a page doesn't
+     scroll), so short and long pages share one width and nothing jumps
+     sideways when navigating. scrollbar-gutter covers other browsers. */
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    background: var(--bg);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg font-sans text-[15px]/[22px] text-fg antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply m-0 font-medium;
+  }
+  h1 {
+    @apply text-[28px]/[1.15] tracking-[-0.01em];
+  }
+  h2 {
+    @apply text-[17px]/6;
+  }
+  h3 {
+    @apply text-[15px]/[22px];
+  }
+  p {
+    @apply m-0 mb-3;
+  }
+  a {
+    @apply text-accent no-underline hover:underline hover:underline-offset-3;
+  }
+  code {
+    @apply rounded-[4px] bg-raised px-1 py-0.5 font-mono text-xs;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+
+  /* Text-like inputs share one look: a tinted well that turns surface on focus. */
+  input:is([type='text'], [type='email'], [type='password'], [type='number'], [type='search'], :not([type])),
+  textarea {
+    @apply min-h-10 w-full rounded-md border border-line-strong bg-field px-3 py-2 text-[15px] transition-[border-color,box-shadow,background-color] duration-150 ease-gf placeholder:text-muted;
+  }
+  input:focus,
+  textarea:focus {
+    @apply border-accent bg-surface ring-3 ring-accent-soft outline-none;
+  }
+  textarea {
+    @apply resize-y leading-[22px];
+  }
+  input[type='search']::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+/* ── Shared primitives (utilities in markup override these) ─────────────── */
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-surface shadow-soft;
+  }
+
+  .btn {
+    @apply inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-4 text-sm font-medium whitespace-nowrap text-fg no-underline transition-[background-color,border-color,transform] duration-150 ease-gf hover:bg-raised hover:no-underline active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface disabled:active:scale-100;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-accent-ink hover:border-accent-hover hover:bg-accent-hover disabled:hover:bg-accent;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-fg-2 hover:text-fg disabled:hover:bg-transparent;
+  }
+  .btn-danger {
+    @apply border-danger bg-danger text-danger-ink hover:border-[color-mix(in_srgb,var(--danger)_86%,#000)] hover:bg-[color-mix(in_srgb,var(--danger)_86%,#000)];
+  }
+  .btn-sm {
+    @apply h-8 px-3 text-[13px];
+  }
+  .btn-lg {
+    @apply h-11 px-5 text-[15px];
+  }
+
+  .icon-btn {
+    @apply inline-grid size-8 flex-none place-items-center rounded-sm border-0 bg-transparent text-muted no-underline transition-[background-color,color] duration-150 ease-gf hover:bg-raised hover:text-fg hover:no-underline disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent;
+  }
+  .icon-btn-danger {
+    @apply hover:bg-danger-soft hover:text-danger;
+  }
+
+  .link-btn {
+    @apply inline-flex items-center gap-1 border-0 bg-transparent p-0 text-left text-sm font-medium text-accent disabled:cursor-not-allowed disabled:text-muted;
+  }
+
+  .field {
+    @apply mb-4 flex flex-col gap-1;
+  }
+  .field > span {
+    @apply text-[13px]/5 font-medium text-fg-2;
+  }
+  .field-label {
+    @apply text-[13px]/5 font-medium text-fg-2;
+  }
+
+  .chip {
+    @apply inline-block rounded-[4px] bg-raised px-1.5 py-0.5 font-mono text-xs whitespace-nowrap text-fg-2;
+  }
+  .chip-logic {
+    @apply bg-accent-soft text-accent;
+  }
+  .chip-warn {
+    @apply bg-warn-soft text-warn;
+  }
+
+  .alert {
+    @apply mb-4 rounded-md border border-line bg-surface px-4 py-3 text-sm text-fg-2;
+  }
+  .alert-error {
+    @apply bg-danger-soft text-danger;
+  }
+  .alert-success {
+    @apply text-fg;
+  }
+
+  .spinner {
+    @apply mx-auto my-12 size-6 animate-spin-slow rounded-full border-2 border-line-strong border-t-accent;
+  }
+
+  .field-error {
+    @apply m-0 mt-2 text-[13px]/5 font-medium text-danger;
+  }
+
+  /* Hover tooltip shared by the charts. */
+  .chart-tip {
+    @apply pointer-events-none fixed z-60 -translate-x-1/2 -translate-y-[calc(100%_+_12px)] rounded-md border border-line-strong bg-surface px-3 py-2 text-[13px]/[18px] whitespace-nowrap text-fg shadow-float;
+  }
+
+  /* Mono for numbers/ids; sans for short phrases. */
+  .meta {
+    @apply m-0 font-mono text-xs text-muted;
+  }
+  .note {
+    @apply m-0 text-[13px]/5 text-muted;
+  }
+
+  /* Floating menu panel + its rows (account menu, question ⋯ menu). */
+  .menu-pop {
+    @apply absolute z-30 min-w-44 animate-menu-in rounded-lg border border-line-strong bg-surface p-1 shadow-float;
+  }
+  .menu-item {
+    @apply flex h-9 w-full items-center gap-2 rounded-sm border-0 bg-transparent px-3 text-left text-sm text-fg transition-[background-color] duration-150 ease-gf hover:bg-raised focus-visible:bg-raised focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted [&_svg]:text-muted;
+  }
+
+  .keycap {
+    @apply inline-grid h-5 min-w-5 place-items-center rounded-[4px] border border-b-2 border-line-strong bg-raised px-1 font-mono text-[11px] leading-none text-muted;
+  }
+}
+
+/* ── Things utilities can't express ─────────────────────────────────────── */
+
+/* Signature ink tick: the stroke draws itself once when a choice is picked. */
+.ink-tick path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.ink-draw path {
+  animation: ink 320ms var(--ease-gf) both;
+}
+@keyframes ink {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-draw path {
+    animation: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes fade-bg {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Native <dialog>: open animation and backdrop. */
+dialog.confirm[open] {
+  animation: dialog-in 220ms var(--ease-gf);
+}
+dialog.confirm::backdrop {
+  background: rgba(10, 10, 12, 0.36);
+  animation: fade-bg 220ms var(--ease-gf);
+}
+
+/* Scrollbars: a 6px thumb in a 10px lane, tinted from the text ramp. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:active {
+  background: var(--muted);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* The page's own track matches the sticky admin header (height --hdr, set by
+   AdminLayout) so the reserved lane never notches the header. */
+html::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+html:has(.app-header)::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to bottom,
+    var(--surface) 0 calc(var(--hdr, 57px) - 1px),
+    color-mix(in srgb, var(--text) 8%, var(--surface)) calc(var(--hdr, 57px) - 1px) var(--hdr, 57px),
+    var(--bg) var(--hdr, 57px)
+  );
+}
+/* Small inner scrollers get an even slimmer lane. */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  border-width: 1px;
+  border-radius: 3px;
+}
+/* Firefox (no ::-webkit-scrollbar): the standard properties. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
+}
