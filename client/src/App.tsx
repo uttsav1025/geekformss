@@ -10,6 +10,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AllSurveys = lazy(() => import('./pages/AllSurveys'));
 const Builder = lazy(() => import('./pages/Builder'));
+const PublicSurvey = lazy(() => import('./pages/PublicSurvey'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/s/:slug" element={<PublicSurvey />} />
           <Route
             path="/admin"
             element={
