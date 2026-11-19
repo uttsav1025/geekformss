@@ -1,0 +1,67 @@
+# Production-style stack: postgres + one-shot migrate + api (serves the SPA too).
+#   cp .env.example .env   # fill in the secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml --profile seed run --rm seed   # optional demo data
+x-app: &app
+  build: .
+  image: geekforms:latest
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: postgres://${POSTGRES_USER:-geekforms}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-geekforms}
+    JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (32+ chars)}
+    REFRESH_SECRET: ${REFRESH_SECRET:?set REFRESH_SECRET (32+ chars)}
+    CORS_ORIGIN: ${CORS_ORIGIN:?set CORS_ORIGIN, e.g. https://forms.example.com}
+    TRUST_PROXY: ${TRUST_PROXY:-1}
+    PARTIAL_TTL_DAYS: ${PARTIAL_TTL_DAYS:-30}
+    DEMO_EMAIL: ${DEMO_EMAIL:-}
+    DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+  read_only: true
+  tmpfs: [/tmp]
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '3' }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-geekforms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-geekforms}
+    volumes:
+      - ${DATA_DIR:-./docker-data}/postgres:/var/lib/postgresql/data # bind mount: `down -v` can't destroy it
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-geekforms}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    # no ports: reachable only on the internal network
+
+  migrate:
+    <<: *app
+    command: ['node', 'server/dist/db/migrate.js']
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+
+  api:
+    <<: *app
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    ports: ['${APP_PORT:-4000}:4000']
+    deploy:
+      resources:
+        limits: { memory: 512m }
+    stop_grace_period: 30s
+    restart: unless-stopped
+
+  seed:
+    <<: *app
+    profiles: ['seed']
+    command: ['node', 'server/dist/db/seed/demo.seed.js']
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: 'no'

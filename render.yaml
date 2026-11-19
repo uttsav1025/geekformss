@@ -1,0 +1,21 @@
+# Render Blueprint: one web service (API + built React app on the same origin).
+# Postgres: point DATABASE_URL at Neon / Render Postgres / any hosted Postgres.
+services:
+  - type: web
+    name: geekforms
+    runtime: docker
+    plan: free
+    healthCheckPath: /ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: TRUST_PROXY
+        value: '1'
