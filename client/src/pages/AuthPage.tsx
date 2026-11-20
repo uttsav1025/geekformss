@@ -1,4 +1,5 @@
 import { type ChangeEvent, type FormEvent, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { errorMessage } from '../lib/api';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { type AuthMode, useAuth } from '../lib/auth';
@@ -14,6 +15,7 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const isRegister = mode === 'register';
@@ -69,13 +71,26 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         </label>
         <label className="field">
           <span>Password</span>
-          <input
-            type="password"
-            value={form.password}
-            onChange={set('password')}
-            autoComplete={isRegister ? 'new-password' : 'current-password'}
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={set('password')}
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
+              className="pr-10"
+              required
+            />
+            <button
+              type="button"
+              className="icon-btn absolute top-1/2 right-1 -translate-y-1/2"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              title={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
+            </button>
+          </div>
           {isRegister && <small className="text-muted">At least 8 characters</small>}
         </label>
         <button className="btn btn-primary mt-2 mb-4 w-full" disabled={busy}>
