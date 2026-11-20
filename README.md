@@ -2,6 +2,8 @@
 
 A survey builder on the PERN stack (PostgreSQL, Express, React, Node), TypeScript end to end. Admins build surveys with conditional logic, respondents answer at a public link without logging in, and results land on an analytics dashboard.
 
+**Live:** https://geekformss.vercel.app (register an account to try it; the API sleeps when idle, so the first request can take about a minute)
+
 ## Features
 
 - **Builder**: text, multiple choice, checkboxes and 1–5 rating questions. Add, duplicate, reorder (drag or buttons), mark required, live preview, autosave.
@@ -67,8 +69,13 @@ Only services touch the database. Every response uses `{ success, data, message,
 
 ## Deployment
 
-One service: Express serves `/api/v1` and the built app from the same origin, so there's no CORS and the cookie just works.
-The multi-stage `Dockerfile` builds a non-root image with a health check. `docker-compose.prod.yml` runs Postgres, then a migration job, then the API. `render.yaml` deploys to Render; add `DATABASE_URL` (a free [Neon](https://neon.tech) database works).
+Live setup: **Vercel** (frontend) → **Render** (API, Docker) → **Neon** (Postgres).
+
+- **Vercel** builds the client (`vercel.json`) and proxies `/api/*` to Render, so the browser sees one origin and the `SameSite=Strict` refresh cookie keeps working.
+- **Render** runs the multi-stage `Dockerfile` (non-root, health check) from `render.yaml`. Set `DATABASE_URL` (Neon pooled URL) and `DATABASE_URL_UNPOOLED` (direct URL, used for migrations, which run at boot). `TRUST_PROXY=2` covers the Vercel and Render hops.
+- **Neon** is linked with `neon.ts` (`neon init` / `neon deploy`).
+
+Self-hosting instead: Express also serves the built app, so the image runs alone. `docker-compose.prod.yml` runs Postgres, then a migration job, then the API.
 
 ## API
 
