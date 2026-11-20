@@ -1,4 +1,5 @@
-# Render Blueprint: one web service (API + built React app on the same origin).
+# Render Blueprint: one web service (API, plus the built app on the same origin).
+# The Vercel frontend proxies /api here (see vercel.json).
 # Postgres: point DATABASE_URL at Neon / Render Postgres / any hosted Postgres.
 # On Neon set DATABASE_URL to the pooled URL and DATABASE_URL_UNPOOLED to the direct one.
 services:
@@ -20,5 +21,6 @@ services:
         generateValue: true
       - key: CORS_ORIGIN
         value: '*'
+      # Two hops in front of Express: Vercel's proxy, then Render's. Use '1' without Vercel.
       - key: TRUST_PROXY
-        value: '1'
+        value: '2'
