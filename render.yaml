@@ -19,6 +19,6 @@ services:
       - key: REFRESH_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        sync: false
+        value: '*'
       - key: TRUST_PROXY
         value: '1'

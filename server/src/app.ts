@@ -19,7 +19,7 @@ export const createApp = () => {
   // Default helmet CSP: scripts only from our origin (the theme bootstrap is a file,
   // not inline), styles/fonts may come over https (Google Fonts), images self + data:.
   app.use(helmet());
-  // "*" can't be combined with credentials (the refresh cookie), so it is only a dev convenience.
+  // "*" allows any origin: `origin: true` echoes the caller's Origin (a literal "*" can't carry credentials).
   app.use(cors({ origin: corsOrigins.includes("*") ? true : corsOrigins, credentials: true }));
   app.use(express.json({ limit: "256kb" }));
   app.use(cookieParser());

@@ -32,9 +32,11 @@ const envSchema = z.object({
   // bcrypt cost. 12 ≈ 250 ms per hash on a modern core; lower only in tests.
   HASH_SALT_ROUND: int(12, 4, 15),
 
-  // Comma-separated allow-list. "*" is accepted for local hacking only: browsers
-  // refuse "*" together with credentials, so production must list real origins.
-  CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  // "*" (default) allows every origin; or a comma-separated allow-list to lock it down.
+  // With "*" the request's Origin is echoed back, since browsers refuse a literal "*"
+  // together with credentials. The refresh cookie is SameSite=Strict, so other sites
+  // still never send it; they authenticate with a Bearer token.
+  CORS_ORIGIN: z.string().default("*"),
   // Hops in front of the app (Render/Fly/nginx = 1) so rate limits see real client IPs.
   TRUST_PROXY: int(0, 0, 10),
 
