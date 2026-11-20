@@ -18,8 +18,6 @@ import { surveyVersions, surveys } from "../schema/survey.schema.js";
 import { responses } from "../schema/response.schema.js";
 import { migrate } from "../migrate.js";
 
-const LEGACY_DEMO_EMAILS = ["demo@pulse.dev"]; // pre-rename demo account, removed on --reset
-
 const feedbackSchema: SurveySchema = {
   questions: [
     {
@@ -215,12 +213,7 @@ export const seedDemo = async ({ reset = false } = {}) => {
 
   await db.transaction(async (tx) => {
     // Cascades remove the account's surveys, versions, responses and refresh tokens.
-    await tx.delete(users).where(
-      sql`lower(${users.email}) IN (${sql.join(
-        [email, ...LEGACY_DEMO_EMAILS].map((e) => sql`${e}`),
-        sql`, `,
-      )})`,
-    );
+    await tx.delete(users).where(sql`lower(${users.email}) = ${email}`);
 
     const [user] = await tx
       .insert(users)

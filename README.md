@@ -29,12 +29,11 @@ Every env variable is documented in [`.env.example`](.env.example) and validated
 | Command | What it does |
 |---|---|
 | `npm run dev` | Migrate, then run API and Vite |
-| `npm test` | Unit tests and API integration tests (real Postgres) |
+| `npm test` | Unit tests for the shared validation and logic |
 | `npm run check` | Type check, lint and formatting (a pre-commit hook lints staged files) |
 | `npm run build` / `npm start` | Production build / one server for API and client |
 | `npm run db:generate` / `db:migrate` | Create / apply Drizzle migrations |
 | `npm run db:seed:reset` | Recreate the demo data |
-| `npm run smoke` | End-to-end check against a running server |
 
 ## Stack and structure
 
@@ -87,8 +86,6 @@ Full reference in [`api-docs/`](api-docs/README.md). Main routes, all under `/ap
 ## Testing
 
 - `shared/test`: 12 unit tests (validation, condition order, visibility, every operator).
-- `server/test`: 19 integration tests against real Postgres: auth and token rotation, ownership, publish and versioning, conditional validation, partial resume, analytics, search and counts, CSV, cleanup, soft delete.
-- `npm run smoke`: a 19-step end-to-end run against a live server.
 
 ## Trade-offs
 

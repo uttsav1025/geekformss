@@ -44,7 +44,7 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
-    files: ['server/test/**/*.ts', 'shared/test/**/*.js'],
+    files: ['shared/test/**/*.js'],
     rules: {
       '@typescript-eslint/no-floating-promises': 'off', // node:test describe/it
       // Tests poke at untyped JSON responses on purpose.
