@@ -141,7 +141,9 @@ export const listVersions = async (surveyId: string) => {
       publishedAt: surveyVersions.publishedAt,
       questionCount: sql<number>`jsonb_array_length(${surveyVersions.schema}->'questions')`.mapWith(Number),
       responseCount:
-        sql<number>`(SELECT count(*) FROM ${responses} r WHERE r.version_id = ${surveyVersions.id} AND r.status = 'complete')`.mapWith(
+        // Qualified on purpose: in a single-table select Drizzle renders ${surveyVersions.id}
+        // as a bare "id", which inside this subquery would bind to r.id.
+        sql<number>`(SELECT count(*) FROM ${responses} r WHERE r.version_id = ${surveyVersions}.id AND r.status = 'complete')`.mapWith(
           Number,
         ),
     })
