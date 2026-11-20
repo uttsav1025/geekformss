@@ -10,5 +10,6 @@ export default defineConfig({
   dialect: "postgresql",
   verbose: true,
   strict: true,
-  dbCredentials: { url: process.env.DATABASE_URL ?? "" },
+  // DDL goes over the direct connection when there is one (Neon's pooler is transaction mode).
+  dbCredentials: { url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "" },
 });

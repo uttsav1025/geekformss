@@ -1,5 +1,6 @@
 # Render Blueprint: one web service (API + built React app on the same origin).
 # Postgres: point DATABASE_URL at Neon / Render Postgres / any hosted Postgres.
+# On Neon set DATABASE_URL to the pooled URL and DATABASE_URL_UNPOOLED to the direct one.
 services:
   - type: web
     name: geekforms
@@ -10,6 +11,8 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
         sync: false
       - key: JWT_SECRET
         generateValue: true

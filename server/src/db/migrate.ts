@@ -2,8 +2,11 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate as drizzleMigrate } from "drizzle-orm/node-postgres/migrator";
-import { db, pool } from "../config/db.js";
+import type pg from "pg";
+import { createPool, pool as appPool } from "../config/db.js";
+import { env } from "../config/env.js";
 
 const migrationsFolder = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../drizzle");
 
@@ -22,7 +25,7 @@ const LEGACY_FK_RENAMES: [table: string, from: string, to: string][] = [
  * 0000_init schema. Record 0000 as applied (exactly as Drizzle would) instead
  * of re-running it, so existing data survives the switch. No-op otherwise.
  */
-async function baselineLegacyDatabase() {
+async function baselineLegacyDatabase(pool: pg.Pool) {
   const client = await pool.connect();
   try {
     const { rows } = await client.query<{ legacy: boolean; tracked: boolean }>(
@@ -66,14 +69,17 @@ async function baselineLegacyDatabase() {
 
 /** Apply pending migrations. Serialised across instances with an advisory lock. */
 export async function migrate() {
+  // Prefer the direct connection when there is one (Neon), else the app pool.
+  const pool = env.DATABASE_URL_UNPOOLED ? createPool(env.DATABASE_URL_UNPOOLED, 2) : appPool;
   const lock = await pool.connect();
   try {
     await lock.query("SELECT pg_advisory_lock(727274)");
-    await baselineLegacyDatabase();
-    await drizzleMigrate(db, { migrationsFolder });
+    await baselineLegacyDatabase(pool);
+    await drizzleMigrate(drizzle(pool), { migrationsFolder });
   } finally {
     await lock.query("SELECT pg_advisory_unlock(727274)").catch(() => {});
     lock.release();
+    if (pool !== appPool) await pool.end();
   }
 }
 
@@ -82,7 +88,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   migrate()
     .then(() => {
       console.log("migrations up to date");
-      return pool.end();
+      return appPool.end();
     })
     .catch((error) => {
       console.error("migration failed:", error);

@@ -17,6 +17,9 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: int(4000, 1, 65535),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  // Direct (non-pooled) connection for migrations. Neon's pooler runs PgBouncer in
+  // transaction mode, where the migrator's session-level advisory lock is unreliable.
+  DATABASE_URL_UNPOOLED: z.preprocess(emptyToUndefined, z.string().optional()),
   PG_POOL_MAX: int(10, 1, 100),
 
   // No defaults for secrets: a fallback literal would mean every deployment that
