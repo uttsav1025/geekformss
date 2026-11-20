@@ -4,6 +4,10 @@ A survey builder on the PERN stack (PostgreSQL, Express, React, Node), TypeScrip
 
 **Live:** https://geekformss.vercel.app (register an account to try it; the API sleeps when idle, so the first request can take about a minute)
 
+**Demo video** (1 min 46 s, click to watch on YouTube):
+
+[![GeekForms demo: the sign-in page](docs/demo-thumbnail.png)](https://youtu.be/lyG5xYCGmnA)
+
 ## Features
 
 - **Builder**: text, multiple choice, checkboxes and 1–5 rating questions. Add, duplicate, reorder (drag or buttons), mark required, live preview, autosave.
