@@ -21,12 +21,14 @@ COPY client client
 RUN npm run build -w server && npm run build -w client
 
 # ── prod-deps: runtime dependencies only ─────────────────────────────────────
+# --ignore-scripts: the root "prepare" (husky) is a dev tool and is not installed here;
+# no runtime dependency needs an install script.
 FROM base AS prod-deps
 COPY package.json package-lock.json ./
 COPY shared/package.json shared/
 COPY server/package.json server/
 COPY client/package.json client/
-RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev -w server -w shared --include-workspace-root=false --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev -w server -w shared --include-workspace-root=false --ignore-scripts --no-audit --no-fund
 
 # ── runtime ──────────────────────────────────────────────────────────────────
 FROM node:${NODE_VERSION} AS runtime
